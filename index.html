@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>春节日期查询</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .intro {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .input-wrapper {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-confirm {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-reset {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .btn-reset:hover {
+            background: #e0e0e0;
+        }
+
+        .result {
+            display: none;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .result-content {
+            font-size: 20px;
+            color: #333;
+            font-weight: 600;
+            line-height: 1.6;
+        }
+
+        .error {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧧 春节日期查询</h1>
+        <p class="intro">输入一个日期，查询未来哪一年的春节是这一天</p>
+
+        <div class="input-group">
+            <div class="input-wrapper">
+                <label for="month">月份</label>
+                <input type="number" id="month" min="1" max="12" placeholder="1-12">
+            </div>
+            <div class="input-wrapper">
+                <label for="day">日期</label>
+                <input type="number" id="day" min="1" max="31" placeholder="1-31">
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-confirm" onclick="searchSpringFestival()">确认查询</button>
+            <button class="btn-reset" onclick="resetForm()">重置</button>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="result" id="result">
+            <div class="result-title">查询结果：</div>
+            <div class="result-content" id="resultContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // 春节日期数据（公历）- 从2020年到2100年
+        const springFestivalDates = {
+            2020: [1, 25], 2021: [2, 12], 2022: [2, 1], 2023: [1, 22], 2024: [2, 10],
+            2025: [1, 29], 2026: [2, 17], 2027: [2, 6], 2028: [1, 26], 2029: [2, 13],
+            2030: [2, 3], 2031: [1, 23], 2032: [2, 11], 2033: [1, 31], 2034: [2, 19],
+            2035: [2, 8], 2036: [1, 28], 2037: [2, 15], 2038: [2, 4], 2039: [1, 24],
+            2040: [2, 12], 2041: [2, 1], 2042: [1, 22], 2043: [2, 10], 2044: [1, 30],
+            2045: [2, 17], 2046: [2, 6], 2047: [1, 26], 2048: [2, 14], 2049: [2, 2],
+            2050: [1, 23], 2051: [2, 11], 2052: [2, 1], 2053: [2, 19], 2054: [2, 8],
+            2055: [1, 28], 2056: [2, 15], 2057: [2, 4], 2058: [1, 24], 2059: [2, 12],
+            2060: [2, 2], 2061: [1, 21], 2062: [2, 9], 2063: [1, 29], 2064: [2, 17],
+            2065: [2, 5], 2066: [1, 26], 2067: [2, 14], 2068: [2, 3], 2069: [1, 23],
+            2070: [2, 11], 2071: [1, 31], 2072: [2, 19], 2073: [2, 7], 2074: [1, 27],
+            2075: [2, 15], 2076: [2, 5], 2077: [1, 24], 2078: [2, 12], 2079: [2, 2],
+            2080: [1, 22], 2081: [2, 9], 2082: [1, 29], 2083: [2, 17], 2084: [2, 6],
+            2085: [1, 26], 2086: [2, 14], 2087: [2, 3], 2088: [1, 24], 2089: [2, 10],
+            2090: [1, 30], 2091: [2, 18], 2092: [2, 7], 2093: [1, 27], 2094: [2, 15],
+            2095: [2, 5], 2096: [1, 25], 2097: [2, 12], 2098: [2, 1], 2099: [1, 21],
+            2100: [2, 9]
+        };
+
+        function validateDate(month, day) {
+            if (!month || !day) {
+                return '请输入完整的月份和日期';
+            }
+
+            if (month < 1 || month > 12) {
+                return '月份必须在1-12之间';
+            }
+
+            const daysInMonth = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+            if (day < 1 || day > daysInMonth[month - 1]) {
+                return `${month}月的日期必须在1-${daysInMonth[month - 1]}之间`;
+            }
+
+            return null;
+        }
+
+        function searchSpringFestival() {
+            const monthInput = document.getElementById('month');
+            const dayInput = document.getElementById('day');
+            const errorDiv = document.getElementById('error');
+            const resultDiv = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
+
+            const month = parseInt(monthInput.value);
+            const day = parseInt(dayInput.value);
+
+            // 验证输入
+            const error = validateDate(month, day);
+            if (error) {
+                errorDiv.textContent = error;
+                errorDiv.classList.add('show');
+                resultDiv.classList.remove('show');
+                return;
+            }
+
+            errorDiv.classList.remove('show');
+
+            // 搜索匹配的年份
+            let foundYears = [];
+
+            for (const [year, date] of Object.entries(springFestivalDates)) {
+                if (date[0] === month && date[1] === day) {
+                    foundYears.push(parseInt(year));
+                }
+            }
+
+            // 显示结果
+            if (foundYears.length > 0) {
+                foundYears.sort((a, b) => a - b);
+                const yearsList = foundYears.slice(0, 10).join('年、') + '年';
+                const moreText = foundYears.length > 10 ? `等${foundYears.length}个年份` : '';
+                resultContent.innerHTML = `<strong>${month}月${day}日</strong> 是以下年份的春节：<br><br>${yearsList}${moreText}`;
+            } else {
+                resultContent.innerHTML = `在2020-2100年间，没有春节是 <strong>${month}月${day}日</strong>`;
+            }
+
+            resultDiv.classList.add('show');
+        }
+
+        function resetForm() {
+            document.getElementById('month').value = '';
+            document.getElementById('day').value = '';
+            document.getElementById('error').classList.remove('show');
+            document.getElementById('result').classList.remove('show');
+        }
+
+        // 回车键触发查询
+        document.getElementById('month').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') searchSpringFestival();
+        });
+
+        document.getElementById('day').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') searchSpringFestival();
+        });
+    </script>
+</body>
+</html>
